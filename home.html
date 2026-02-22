@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BIT Sindri CGPA Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    font-family: Times New Roman;
+    color: white;
+    text-align: center;
+    overflow-x: hidden;
+  }
+/* 🔥 Blurry Logo Background */
+.background{
+    position:fixed;
+    inset:0;
+    background-image:url("1000063709.avif");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    filter:blur(10px);
+    transform:scale(1.2);
+    z-index:-2;
+}
+
+
+/* Dark overlay */
+.overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.65);
+    z-index:-1;
+}
+
+.logo {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 5;
+  }
+
+  .logo img {
+    height: 110px;
+  }
+
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+  }
+
+h1{
+    font-size:2.5em;
+}
+
+input{
+    padding:12px;
+    font-size:1em;
+    border-radius:6px;
+    border:none;
+    width:260px;
+}
+
+button{
+    padding:14px 30px;
+    margin:15px;
+    font-size:1.1em;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.backlog{
+    background:#16a34a;
+    color:white;
+}
+
+.direct{
+    background:#2563eb;
+    color:white;
+}
+
+button:hover{
+    transform:scale(1.05);
+    opacity:0.9;
+}
+
+.result{
+    margin-top:30px;
+    font-size:1.6em;
+}
+
+.footer {
+    margin-top: 30px;
+    font-size: 1.2em;
+    color: #ccc;
+  }
+
+/* -------- INSTRUCTION MODAL -------- */
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.75);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:10;
+}
+
+.modal-box{
+    background:#111;
+    padding:25px;
+    border-radius:10px;
+    max-width:500px;
+    text-align:justify;
+}
+
+.modal-box h2{
+    text-align:center;
+}
+
+.modal-box button{
+    display:block;
+    margin:15px auto 0;
+    background:#2563eb;
+    color:white;
+}
+</style>
+</head>
+
+<body oncontextmenu="return false">
+
+<div class="background"></div>
+<div class="overlay"></div>
+
+<div class="logo">
+  <img src="seventyfive.png" alt="BIT Sindri Logo">
+</div>
+
+
+<!-- 🔥 Instruction Modal -->
+<div class="modal" id="instructionModal">
+  <div class="modal-box">
+    <h2>Instructions</h2>
+    <ul>
+      <li><strong>For mobile users convert your browser to <strong>desktop site</strong> for better experience.</li>
+      <li><strong></strong> For first time users, enter your Registration Number.</li>
+      <li><strong></strong> Click on the <strong>Semester Wise Calculation</strong> button.</li>
+      <li><strong></strong> Register all the details manually across different semesters and save them semester by semester using the <strong>Save SGPA</strong> button.</li>
+      <li><strong></strong> Calculate your SGPA and CGPA.</li>
+      <li><strong></strong>Once the candidates registers all the detials, from the next time candidates just need to enter the regsitration number to calculate the CGPA.</li>
+      <li><strong></strong> Candidates who have backlogs can modify the grade of the corresponding backlog subject in semester wise calculation page to generate the new CGPA after the backlog is cleared.</li>
+      <li><strong></strong> ALL THE DATA IS STORED LOCALLY IN YOUR PARTICULAR DEVICE. NO DATA IS STORED ON ANY SERVER.</li>
+    </ul>
+    <button onclick="closeModal()">Got it</button>
+  </div>
+</div>
+
+<div class="container">
+
+<h1>BIT SINDRI GPA PORTAL</h1>
+
+<!-- View Instructions Button -->
+<button onclick="openModal()">View Instructions</button>
+
+<br><br>
+
+<label><strong>Registration Number</strong></label><br><br>
+<input type="text" id="regNo" placeholder="Enter Registration Number">
+
+<br><br>
+
+<button class="backlog" onclick="goToBacklog()">Semester-wise Calculation</button>
+<button class="direct" onclick="calculateDirectCGPA()">Overall CGPA Calculation</button>
+
+<div class="result" id="result"></div>
+
+<div class="footer">
+Created & Managed by Amit Dhar, Mechanical 2022-26 Batch.  
+<br>Dedicated to the Future of BIT Sindri  
+<br>© All Rights Reserved
+</div>
+
+</div>
+
+<script>
+
+/* -------- Modal Control -------- */
+function openModal(){
+    document.getElementById("instructionModal").style.display="flex";
+}
+
+function closeModal(){
+    document.getElementById("instructionModal").style.display="none";
+}
+
+/* -------- Redirect -------- */
+function goToBacklog(){
+    const reg=document.getElementById("regNo").value.trim();
+    if(!reg){
+        alert("Enter Registration Number");
+        return;
+    }
+    localStorage.setItem("currentReg",reg);
+    window.location.href="index%20(10).html";
+}
+
+/* -------- CGPA Calculation -------- */
+function calculateDirectCGPA(){
+
+    const reg=document.getElementById("regNo").value.trim();
+    if(!reg){
+        alert("Enter Registration Number");
+        return;
+    }
+
+    const rawData=localStorage.getItem(reg);
+
+    if(!rawData){
+        document.getElementById("result").innerText=
+        "No semester data found.";
+        return;
+    }
+
+    const data=JSON.parse(rawData);
+
+    let totalWeighted=0;
+    let totalCredits=0;
+
+    Object.keys(data).forEach(key=>{
+        if(!isNaN(key)){
+            const sem=data[key];
+            if(sem && sem.sgpa && sem.credits){
+                totalWeighted+=sem.sgpa*sem.credits;
+                totalCredits+=sem.credits;
+            }
+        }
+    });
+
+    if(totalCredits===0){
+        document.getElementById("result").innerText=
+        "No valid semester data.";
+        return;
+    }
+
+    let rawCGPA=totalWeighted/totalCredits;
+    let cgpa=Math.round((rawCGPA+Number.EPSILON)*100)/100;
+
+    document.getElementById("result").innerText=
+        "Final CGPA: "+cgpa.toFixed(2);
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BIT Sindri Grade Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body {
+    margin: 0;
+    font-family: Times New Roman;
+    color: white;
+    text-align: center;
+    overflow-x: hidden;
+  }
+
+  .background {
+    position: fixed;
+    inset: 0;
+    background-image: url("1000063709.avif");
+    background-size: cover;
+    background-position: center;
+    filter: blur(18px);
+    transform: scale(1.1);
+    z-index: -2;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: -1;
+  }
+
+  .logo {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 5;
+  }
+
+  .logo img {
+    height: 110px;
+  }
+
+  h1 {
+    margin-top: 25px;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+  }
+
+  input, select, button {
+    padding: 8px;
+    margin: 6px;
+    font-size: 1em;
+    border-radius: 4px;
+    border: none;
+  }
+
+  button {
+    background: #1e40af;
+    color: white;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #2563eb;
+  }
+
+  table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(6px);
+  }
+
+  th, td {
+    border: 1px solid #aaa;
+    padding: 8px;
+  }
+
+  .result {
+    margin-top: 20px;
+    font-size: 1.5em;
+    white-space: pre-line;
+  }
+
+  .footer {
+    margin-top: 30px;
+    font-size: 1.2em;
+    color: #ccc;
+  }
+
+  /* ---------- MODAL ---------- */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .modal-box {
+    background: #111;
+    padding: 25px;
+    border-radius: 10px;
+    max-width: 500px;
+    text-align: justify;
+  }
+
+  .modal-box h2 {
+    text-align: center;
+  }
+
+  .modal-box button {
+    display: block;
+    margin: 15px auto 0;
+  }
+
+  @media (max-width: 600px) {
+    table { font-size: 0.9em; }
+    input { width: 90%; }
+    .logo img { height: 80px; }
+  }
+</style>
+</head>
+
+<body oncontextmenu="return false">
+
+<div class="background"></div>
+<div class="overlay"></div>
+
+<div class="logo">
+  <img src="seventyfive.png" alt="BIT Sindri Logo">
+</div>
+
+<!-- INSTRUCTION MODAL -->
+<div class="modal" id="instructionModal">
+  <div class="modal-box">
+    <h2>Instructions</h2>
+    <ul>
+      <li>For mobile users convert your browser to <strong>desktop site</strong> for better experience.</li> 
+      <li>Enter your registration number</li> 
+      <li>Select a semester</li>
+      <li>Add subjects with credits and grades</li> 
+      <li>Save SGPA semester-wise</li> 
+      <li>Calculate CGPA after saving semester-wise credits and grades</li>
+      <li><strong></strong> Candidates who have backlogs can modify the grade of the corresponding backlog subject in semester wise calculation page to generate the new CGPA after the backlog is cleared.</li> 
+      <li>Data stays only in your browser of that <strong>particular device</strong> similar to how google passwords are saved in your device</li>
+    </ul>
+    <button onclick="closeModal()">Got it</button>
+  </div>
+</div>
+
+<h1>BIT Sindri Grade Portal</h1>
+
+<!-- 🔹 VIEW INSTRUCTIONS BUTTON (PLACED HERE AS REQUESTED) -->
+<button onclick="openModal()">View Instructions</button>
+
+<div class="container">
+
+  <label><strong>Registration / Roll Number</strong></label><br>
+  <input id="regNo" placeholder="Registration / Roll Number"
+         onblur="loadSemesterData()">
+
+  <br><br>
+
+  <label><strong>Select Semester</strong></label><br>
+  <select id="semester" onchange="loadSemesterData()">
+    <option value="1">Semester 1</option>
+    <option value="2">Semester 2</option>
+    <option value="3">Semester 3</option>
+    <option value="4">Semester 4</option>
+    <option value="5">Semester 5</option>
+    <option value="6">Semester 6</option>
+    <option value="7">Semester 7</option>
+    <option value="8">Semester 8</option>
+  </select>
+
+  <br><br>
+
+  <button onclick="addRow()">Add Subject</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Subject</th>
+        <th>Credits</th>
+        <th>Grade</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <br>
+  <button onclick="calculateAndSaveSGPA()">Calculate & Save SGPA</button>
+  <button onclick="calculateCGPA()">Calculate CGPA</button>
+
+  <div class="result" id="result"></div>
+
+  <div class="footer">
+    <div>Created by Amit Dhar, Mechanical 2022–26 Batch</div>
+    <div>Dedicated to the betterment of BIT Sindri</div>
+    <div>© All rights reserved</div>
+  </div>
+</div>
+
+<script>
+const gradePoints = { "A+":10, "A":9, "B+":8, "B":7, "C+":6, "C":5, "F":0 };
+
+function openModal() {
+  document.getElementById("instructionModal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("instructionModal").style.display = "none";
+}
+
+function addRow() {
+  tableBody.insertAdjacentHTML("beforeend", `
+    <tr>
+      <td><input></td>
+      <td><input type="number" step="0.5"></td>
+      <td>
+        <select>${Object.keys(gradePoints).map(g=>`<option>${g}</option>`).join("")}</select>
+      </td>
+    </tr>
+  `);
+}
+
+function loadSemesterData() {
+  const reg = regNo.value.trim();
+  const sem = semester.value;
+  tableBody.innerHTML = "";
+  if (!reg) return;
+
+  const data = JSON.parse(localStorage.getItem(reg));
+  if (!data || !data[sem]) return;
+
+  data[sem].subjects.forEach(s => {
+    tableBody.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td><input value="${s.name}"></td>
+        <td><input type="number" value="${s.credit}"></td>
+        <td>
+          <select>${Object.keys(gradePoints)
+            .map(g=>`<option ${g===s.grade?"selected":""}>${g}</option>`).join("")}
+          </select>
+        </td>
+      </tr>
+    `);
+  });
+}
+
+function calculateAndSaveSGPA() {
+  const reg = regNo.value.trim();
+  const sem = semester.value;
+  if (!reg) return alert("Enter registration number");
+
+  let credits = 0, total = 0, subjects = [];
+
+  document.querySelectorAll("#tableBody tr").forEach(r => {
+    const c = +r.cells[1].children[0].value || 0;
+    const g = r.cells[2].children[0].value;
+    credits += c;
+    total += c * gradePoints[g];
+    subjects.push({
+      name: r.cells[0].children[0].value,
+      credit: c,
+      grade: g
+    });
+  });
+
+  if (!credits) return alert("Enter subject credits");
+
+  const sgpa = Math.round(((total / credits) + Number.EPSILON) * 100) / 100;
+  const data = JSON.parse(localStorage.getItem(reg)) || {};
+  data[sem] = { sgpa, credits, subjects };
+  localStorage.setItem(reg, JSON.stringify(data));
+
+  result.innerText = `SGPA (Semester ${sem}): ${sgpa.toFixed(2)}\nSaved Successfully`;
+}
+
+function calculateCGPA() {
+  const reg = regNo.value.trim();
+  if (!reg) return alert("Enter registration number");
+
+  const data = JSON.parse(localStorage.getItem(reg));
+  if (!data) return result.innerText = "No semester data found";
+
+  let totalWeighted = 0, totalCredits = 0;
+
+  Object.values(data).forEach(s => {
+    if (typeof s.sgpa === "number" && typeof s.credits === "number" && s.credits > 0) {
+      totalWeighted += s.sgpa * s.credits;
+      totalCredits += s.credits;
+    }
+  });
+
+  if (!totalCredits) return result.innerText = "No valid semester data";
+
+  result.innerText =
+    `Final CGPA: ${(totalWeighted / totalCredits).toFixed(2)}\nThank you, Visit Again!!!`;
+}
+window.onload = function(){
+
+    selectYear(0x7e6);
+
+    const savedReg = localStorage.getItem("currentReg");
+
+    if(savedReg){
+        document.getElementById("regNo").value = savedReg;
+        loadSemesterData();
+    }
+};
+</script>
+
+</body>
+</html>
